@@ -1,4 +1,5 @@
-
+#This is Makefile for both pull.cpp and push.cpp
+#Modified by watson.
 CFLAGS = -Wall -O -g
 LDFLAGS = -I /usr/local/ffmpeg/include \
 	-L /usr/local/ffmpeg/lib \
