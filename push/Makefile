@@ -10,9 +10,6 @@ LDFLAGS = -I /usr/local/ffmpeg/include \
 	-lswresample \
 	-lswscale
 target:
-	mkdir source
-	cp pull.cpp source -fa
-	tar czf source.tar.gz source
-	g++ -std=c++11 pull.cpp -o pull $(LDFLAGS) $(CFLAGS)	
+	g++ -std=c++11 push.cpp -o pushvideo $(LDFLAGS) $(CFLAGS)	
 clean:
-	rm pull
+	rm pushvideo
