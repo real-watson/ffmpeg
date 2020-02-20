@@ -14,7 +14,6 @@ AVStream *stream;
 AVCodecContext *pCodecCtx;
 AVCodec *pCodec;
 
-FILE *video = NULL;
 
 #define URL "rtmp://120.77.214.213:1935/live_video/video"
 #define OUT "helloworld.yuv"
@@ -27,6 +26,7 @@ static void init_register_network()
 
 static int test_ffmpeg_rtmp_client()
 {
+	FILE *video = NULL;
 	int i;
 	int ret = -1;
 	int got_picture = -1;
@@ -46,14 +46,14 @@ static int test_ffmpeg_rtmp_client()
 	format_ctx = avformat_alloc_context();
 	//open video file -> rtmp path
 	ret = avformat_open_input(&format_ctx, URL, nullptr, nullptr);
-	if (ret != 0)
+	if (!ret)
 	{
 		fprintf(stderr, "fail to open url: %s, return value: %d\n", URL, ret);
 		return -1;
 	}
 	// Read packets of a media file to get stream information
 	ret = avformat_find_stream_info(format_ctx, nullptr);
-	if ( ret < 0) 
+	if (ret < 0) 
 	{
 		fprintf(stderr, "fail to get stream information: %d\n", ret);
 		return -1;
