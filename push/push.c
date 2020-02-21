@@ -8,7 +8,7 @@
 #define PUSH_PATH "rtmp://120.77.214.213:1935/live_video/video"
 #define AVIN_PATH "hello.mp4"
 
-static char *push_proto_set(char *path)
+char *push_proto_set(char *path)
 {
 	char *format_name = NULL;
 
@@ -114,9 +114,8 @@ int main(int argc, char **argv)
 		}	
 
 		ret=avcodec_parameters_copy(out_stream->codecpar,in_stream->codecpar);
-			if(ret<0)
+		if(ret<0)
 		{
-
 			printf("avformat_parameters_copy failed\n");
 		}
 
@@ -124,7 +123,7 @@ int main(int argc, char **argv)
 	
 		if( pOutFmtContext->oformat->flags & AVFMT_GLOBALHEADER)
 		{
-					out_stream->codec->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+			out_stream->codec->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 		}
 	}
 
@@ -151,11 +150,11 @@ AVIO_FLAG_WRITE -> WRITE
 		ret=av_read_frame(pInFmtContext,in_packet);
 		/*each frame should be save as image*/
 
-		printf("The av_read_frame is %d\n");
+		printf("The av_read_frame is %d kb\n",in_packet->size);
 		if(ret<0)
 		{
-					printf("read frame end\n");
-					break;
+			printf("read frame end\n");
+			break;
 		}
 
 		in_stream=pInFmtContext->streams[in_packet->stream_index];
