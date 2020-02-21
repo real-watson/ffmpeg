@@ -13,18 +13,12 @@ char *push_proto_set(char *path)
 	char *format_name = NULL;
 
 	if (strstr(path,"rtmp://") != NULL)
-	{
 		format_name = "flv";
-	}
 	else if (strstr(path,"udp://")  != NULL)
-	{
 		format_name = "mpegts";
-	}
 	else
-	{
 		format_name = NULL;
-	}
-	return (format_name);
+	return format_name;
 }
 
 int main(int argc, char **argv)
@@ -81,12 +75,12 @@ int main(int argc, char **argv)
 		printf("avformat_output_context2 failed\n");
 		return -1;
 	}
-/*search the index of video*/
+	/*search the index of video*/
 	for(i=0;i<pInFmtContext->nb_streams;i++)
 	{
 
 		in_stream=pInFmtContext->streams[i];
-	/*check the types of stream*/
+		/*check the types of stream*/
 		if(in_stream->codecpar->codec_type==AVMEDIA_TYPE_AUDIO)
 		{
 			audioIndex=i;
@@ -100,6 +94,7 @@ int main(int argc, char **argv)
 
 			printf("video: frame_rate:%d/%d\n", frame_rate.den, frame_rate.num);
 			duration=av_q2d((AVRational){frame_rate.den,frame_rate.num});
+			printf("The duration is %lf\n",duration);
 
 		}
 
@@ -128,10 +123,10 @@ int main(int argc, char **argv)
 	}
 
 	av_dump_format(pOutFmtContext,0,PUSH_PATH,1);
-/*
-out_file -> rtmp address
-AVIO_FLAG_WRITE -> WRITE
-*/
+	/*
+	out_file -> rtmp address
+	AVIO_FLAG_WRITE -> WRITE
+	*/
 	ret=avio_open(&pOutFmtContext->pb,PUSH_PATH,AVIO_FLAG_WRITE);
 	if(ret<0)
 	{
