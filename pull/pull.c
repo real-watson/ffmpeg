@@ -11,8 +11,6 @@ AVFormatContext *format_ctx;
 AVPacket *pkt;
 AVFrame *pFrame;
 AVFrame *pFrameYUV;
-//AVFrame *pFrame = av_frame_alloc();
-//AVFrame *pFrameYUV = av_frame_alloc();
 AVStream *stream;
 AVCodecContext *pCodecCtx;
 AVCodec *pCodec;
@@ -42,7 +40,7 @@ int test_ffmpeg_rtmp_client()
 	int audio_stream_index = -1;
 
 	//open FILE video
-	video = fopen(OUT,"wb+");
+	video = fopen(OUT,"wb");
 	if (NULL == video)
 	{
 		printf("Error in fopen\n");
