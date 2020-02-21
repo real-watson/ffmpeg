@@ -9,8 +9,6 @@
 
 AVFormatContext *format_ctx;
 AVPacket *pkt;
-AVFrame *pFrame;
-AVFrame *pFrameYUV;
 AVStream *stream;
 AVCodecContext *pCodecCtx;
 AVCodec *pCodec;
@@ -18,15 +16,6 @@ AVCodec *pCodec;
 
 #define URL "rtmp://120.77.214.213:1935/live_video/video"
 #define OUT "helloworld.yuv"
-
-void save_one_image(AVFrame *pFrameYUV,AVCodecContext *pCodecCtx,FILE *video)
-{
-	int screen = 0;
-	if (video == NULL)
-		return;
-	screen = (pCodecCtx->width)*(pCodecCtx->height)*3;
-	fwrite(pFrameYUV->data[0],screen,1,video); 
-}
 
 void init_register_network()
 {
@@ -38,7 +27,7 @@ void init_register_network()
        	avformat_network_init();
 }
 
-int test_ffmpeg_rtmp_client()
+void test_ffmpeg_rtmp_client()
 {
 	FILE *video = NULL;
 	int i;
@@ -53,7 +42,7 @@ int test_ffmpeg_rtmp_client()
 	if (NULL == video)
 	{
 		printf("Error in fopen\n");
-		return -1;
+		return;
 	}
 
 	//init register and network
@@ -64,10 +53,10 @@ int test_ffmpeg_rtmp_client()
 
 	//open video file -> rtmp path
 	ret = avformat_open_input(&format_ctx, URL, NULL, NULL);
-	if (!ret)
+	if (ret < 0)
 	{
 		fprintf(stderr, "fail to open url: %s, return value: %d\n", URL, ret);
-		return -1;
+		return;
 	}
 
 	// Read packets of a media file to get stream information
@@ -75,7 +64,7 @@ int test_ffmpeg_rtmp_client()
 	if (ret < 0) 
 	{
 		fprintf(stderr, "fail to get stream information: %d\n", ret);
-		return -1;
+		return;
 	}
 	
 	/*Fetch index of audio and video from streams*/ 
@@ -89,14 +78,12 @@ int test_ffmpeg_rtmp_client()
 		//audio type
 		else if (stream->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)
 			audio_stream_index = i;
-		else
-			fprintf(stdout, "none sample format\n");
 	}
  
 	if (video_stream_index == -1 || audio_stream_index == -1)
 	{
 		fprintf(stderr, "no video audio stream\n");
-		return -1;
+		return;
 	}
 
 	/*Fetch the context from decoder and coder from video*/
@@ -107,26 +94,23 @@ int test_ffmpeg_rtmp_client()
 	if (NULL == pCodec)
 	{
 		printf("could not find decoder......\n");
-		return -1;
+		return;
 	}
 
 	//open decoder 
 	if (avcodec_open2(pCodecCtx,pCodec,NULL)<0)
 	{
 		printf("avcodec open failed\n");
-		return -1;
+		return;
 	}
 	printf("The width of video is %d, while the height is %d\n",pCodecCtx->width,pCodecCtx->height);
-	uint8_t *out_buffer = (uint8_t *)av_malloc(avpicture_get_size(AV_PIX_FMT_RGB24, pCodecCtx->width, pCodecCtx->height));
-	avpicture_fill((AVPicture *)pFrameYUV, out_buffer, AV_PIX_FMT_RGB24, pCodecCtx->width, pCodecCtx->height);
-	//The size of video
-	struct SwsContext *sws_ctx = sws_getContext(pCodecCtx->width,pCodecCtx->height,pCodecCtx->pix_fmt,pCodecCtx->width, pCodecCtx->height, AV_PIX_FMT_RGB24,SWS_BICUBIC, NULL, NULL, NULL);
 
 	/*
 	*	read each frame using av_read_frame
 	*	check the index of av
 	*	write in file 
 	*/
+	pkt = av_packet_alloc();
 	while (1) 
 	{
 		//read each frame
@@ -142,36 +126,15 @@ int test_ffmpeg_rtmp_client()
 			printf("video_stream_index......\n");
 			fprintf(stdout, "video stream, packet size: %d\n", pkt->size);
 
-			//decodering video	from avPacket to avFrame	
-			ret = avcodec_decode_video2(pCodecCtx,pFrame,&got_picture,pkt);
-
 			/*pkt->size should not be zero, if it is, it should be break*/
 			if (ret < 0 && !(pkt->size))
 			{
 				printf("decoder error......\n");
-				return -1;
+				return;
 			}
-
-			//If the frame is not zero, it should be return got_picture.
-		 	if (got_picture)
-			{
-				sws_scale(sws_ctx, pFrame->data, pFrame->linesize, 0, pCodecCtx->height,pFrameYUV->data, pFrameYUV->linesize);
-
-				frame_output++;
-				printf("The %d frame\n",frame_output);
-
-				//save image for only one picture
-				if (frame_output == 1)
-				{
-					//fwrite(pFrameYUV->data[0],(pCodecCtx->width)*(pCodecCtx->height)*3,1,video); 
-					/*save one image from pFrameYUV*/
-					save_one_image(pFrameYUV,pCodecCtx,video);
-					break;//break to pull
-				}
-			}
-
 		}
  
+		printf("stop here\n");
 		if (pkt->stream_index == audio_stream_index)
 			fprintf(stdout, "audio stream, packet size: %d\n", pkt->size);
  
@@ -182,15 +145,10 @@ int test_ffmpeg_rtmp_client()
 	avformat_free_context(format_ctx);
 	fclose(video); 
 	avcodec_close(pCodecCtx);
-	av_frame_free(&pFrame);
 	avformat_close_input(&format_ctx);
-	return 0;
 }
 int main(int argc, char **argv)
 {	
-	if (-1 == test_ffmpeg_rtmp_client())
-	{
-		printf("test_ffmpeg_rtmp_client error\n");
-	}
+	test_ffmpeg_rtmp_client();
 	return 0;
 }
