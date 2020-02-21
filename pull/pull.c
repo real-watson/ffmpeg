@@ -12,9 +12,34 @@ AVPacket *pkt;
 AVStream *stream;
 AVCodecContext *pCodecCtx;
 AVCodec *pCodec;
+AVFrame *per_frame;
+AVFrame *rgb_frame;
 
 #define URL "rtmp://120.77.214.213:1935/live_video/video"
-#define OUT "helloworld.yuv"
+#define OUT "helloworld.pnm"
+
+int save_index_image(AVFrame *rgb_frame, int width, int height, int index)
+{
+	FILE *img = NULL;
+	int i;
+
+	//open FILE video
+	img = fopen(OUT,"wb");
+
+	if (NULL == img || rgb_frame == NULL)
+	{
+		printf("Error in fopen\n");
+		return 1;
+	}
+
+	fprintf(img, "P6\n%d %d\n255\n", width, height);//header of img
+
+	for(i=0; i<height; i++)
+		fwrite(rgb_frame->data[0]+i*rgb_frame->linesize[0], 1, width*3, img);
+	fclose(img);
+	return 0;
+}
+
 
 void init_register_network()
 {
@@ -28,19 +53,16 @@ void init_register_network()
 
 void test_ffmpeg_rtmp_client()
 {
-	FILE *video = NULL;
 	int i;
 	int ret = -1;
 	int video_stream_index = -1;
 	int audio_stream_index = -1;
-
-	//open FILE video
-	video = fopen(OUT,"wb");
-	if (NULL == video)
-	{
-		printf("Error in fopen\n");
-		return;
-	}
+	int numbytes;
+	int got_picture;
+	int size;
+	int index = 0;
+	uint8_t *out_buffer;
+	struct SwsContext *img_convert_ctx;
 
 	//init register and network
 	init_register_network();
@@ -102,6 +124,16 @@ void test_ffmpeg_rtmp_client()
 	}
 	printf("The width of video is %d, while the height is %d\n",pCodecCtx->width,pCodecCtx->height);
 
+	//alloc for rgb memory
+	per_frame = av_frame_alloc();
+	rgb_frame = av_frame_alloc();
+	img_convert_ctx = sws_getContext(pCodecCtx->width,pCodecCtx->height,pCodecCtx->pix_fmt,pCodecCtx->width,pCodecCtx->height,AV_PIX_FMT_RGB24, SWS_BICUBIC, NULL, NULL, NULL);
+	numbytes = avpicture_get_size(AV_PIX_FMT_RGB24, pCodecCtx->width,pCodecCtx->height);
+	out_buffer = (uint8_t *) av_malloc(numbytes * sizeof(uint8_t));
+	avpicture_fill((AVPicture *) rgb_frame, out_buffer, AV_PIX_FMT_RGB24,
+	            pCodecCtx->width, pCodecCtx->height);
+	size = pCodecCtx->width * pCodecCtx->height;
+
 	/*
 	*	read each frame using av_read_frame
 	*	check the index of av
@@ -110,6 +142,9 @@ void test_ffmpeg_rtmp_client()
 
 	/*avoid segmentation fault*/
 	pkt = av_packet_alloc();
+	av_new_packet(pkt,size);
+	av_dump_format(format_ctx,0,OUT,0);
+
 	while (1) 
 	{
 		//read each frame
@@ -124,13 +159,28 @@ void test_ffmpeg_rtmp_client()
 		{
 			printf("video_stream_index......\n");
 			fprintf(stdout, "video stream, packet size: %d\n", pkt->size);
+			/*decode video*/
+			ret = avcodec_decode_video2(pCodecCtx,per_frame,&got_picture,pkt);
 
 			/*pkt->size should not be zero, if it is, it should be break*/
 			if (ret < 0 && !(pkt->size))
 			{
-				printf("decoder error......\n");
+				printf("avcodec_decode_video2 error\n");
 				return;
 			}
+			/*If one picture comes it should be storage.*/
+			if (got_picture)
+			{
+				index++;
+				sws_scale(img_convert_ctx,(uint8_t const *) per_frame->data,per_frame->linesize, 0, pCodecCtx->height, rgb_frame->data,rgb_frame->linesize);
+				if (index == 1)
+				{
+					ret = save_index_image(rgb_frame,pCodecCtx->width,pCodecCtx->height,index);
+					if (ret)
+						return;
+				}
+			}
+
 		}
  
 		if (pkt->stream_index == audio_stream_index)
@@ -141,7 +191,8 @@ void test_ffmpeg_rtmp_client()
 
 	//free all 
 	avformat_free_context(format_ctx);
-	fclose(video); 
+	av_free(rgb_frame);
+	av_free(out_buffer);
 	avcodec_close(pCodecCtx);
 	avformat_close_input(&format_ctx);
 }
