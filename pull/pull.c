@@ -32,8 +32,6 @@ void test_ffmpeg_rtmp_client()
 	FILE *video = NULL;
 	int i;
 	int ret = -1;
-	int got_picture = -1;
-	int frame_output = 0;// 帧数
 	int video_stream_index = -1;
 	int audio_stream_index = -1;
 
@@ -110,6 +108,8 @@ void test_ffmpeg_rtmp_client()
 	*	check the index of av
 	*	write in file 
 	*/
+
+	/*avoid segmentation fault*/
 	pkt = av_packet_alloc();
 	while (1) 
 	{
