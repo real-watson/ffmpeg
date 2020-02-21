@@ -17,6 +17,16 @@ AVFrame *rgb_frame;
 
 #define URL "rtmp://120.77.214.213:1935/live_video/video"
 #define OUT "helloworld.pnm"
+#define JPG "hello.jpg"
+
+void img_convert_jpeg(int width, int height)
+{
+	//cmd ffmpeg -y -s 960x540 -i helloworld.pnm helloworld.jpg
+	char cmd[128] = "";
+	sprintf(cmd,"ffmpeg -y -s %dx%d -i %s %s",width,height,OUT,JPG); 
+	system(cmd);
+	return;
+}
 
 int save_index_image(AVFrame *rgb_frame, int width, int height, int index)
 {
