@@ -70,7 +70,7 @@ int main(int argc, char **argv)
 
 	/*out_file flv for rtmp format*/
 	ret=avformat_alloc_output_context2(&pOutFmtContext,NULL,fm_name,PUSH_PATH);
-	if(ret<0)
+	if(ret<0 || (!pOutFmtContext))
 	{
 		printf("avformat_output_context2 failed\n");
 		return -1;
@@ -122,7 +122,7 @@ int main(int argc, char **argv)
 			out_stream->codec->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 		}
 	}
-
+	//to push server
 	av_dump_format(pOutFmtContext,0,PUSH_PATH,1);
 
 	/*
@@ -139,11 +139,17 @@ int main(int argc, char **argv)
 	start_time=av_gettime();
 	printf("The start time is %ld\n",start_time);
 
+	//write head
 	ret=avformat_write_header(pOutFmtContext,NULL);
+	if (ret < 0)
+	{
+		printf("write header failed\n");
+		return -1;
+	}
 
 	in_packet=av_packet_alloc();
 	 
-	while (1) 
+	while (1) // PInFmtContext to in_packet( to server )
 	{
 		/*read each frame and set set pIn* to in_packet*/
 		ret=av_read_frame(pInFmtContext,in_packet);
