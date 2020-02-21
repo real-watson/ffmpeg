@@ -10,6 +10,6 @@ LDFLAGS = -I /usr/local/ffmpeg/include \
 	-lswresample \
 	-lswscale
 target:
-	gcc push.c -o pushvideo $(LDFLAGS) $(CFLAGS)	
+	gcc push.c -o test $(LDFLAGS) $(CFLAGS)	
 clean:
-	rm pushvideo
+	rm test

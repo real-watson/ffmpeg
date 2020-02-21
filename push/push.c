@@ -11,7 +11,8 @@
 char *push_proto_set(char *path)
 {
 	char *format_name = NULL;
-
+	if(path == NULL)
+		format_name = NULL;
 	if (strstr(path,"rtmp://") != NULL)
 		format_name = "flv";
 	else if (strstr(path,"udp://")  != NULL)
@@ -35,12 +36,12 @@ int main(int argc, char **argv)
 	int64_t start_time;
 
 	AVFormatContext *pInFmtContext = NULL;
-	AVStream *in_stream;
-	AVCodec *pInCodec;
-	AVPacket *in_packet;//AVPacket
-	AVFormatContext * pOutFmtContext;
+	AVStream *in_stream = NULL;
+	AVCodec *pInCodec = NULL;
+	AVPacket *in_packet = NULL;//AVPacket
+	AVFormatContext *pOutFmtContext = NULL;
 	AVRational frame_rate;
-	AVStream * out_stream;
+	AVStream * out_stream = NULL;
 
 	/*init the device and register*/
 	avdevice_register_all();
@@ -92,11 +93,9 @@ int main(int argc, char **argv)
 			videoIndex=i;
 			frame_rate=av_guess_frame_rate(pInFmtContext,in_stream,NULL);
 			printf("video: frame_rate:%d/%d\n", frame_rate.num, frame_rate.den);
-
 			printf("video: frame_rate:%d/%d\n", frame_rate.den, frame_rate.num);
 			duration=av_q2d((AVRational){frame_rate.den,frame_rate.num});
-			printf("The duration is %lf\n",duration);
-
+			printf("The duration of each frame is %lf\n",duration);
 		}
 
 		//find decoder
@@ -136,9 +135,7 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	start_time=av_gettime();
-	printf("The start time is %ld\n",start_time);
-
+	start_time = av_gettime();
 	//write head
 	ret=avformat_write_header(pOutFmtContext,NULL);
 	if (ret < 0)
@@ -148,6 +145,11 @@ int main(int argc, char **argv)
 	}
 
 	in_packet=av_packet_alloc();
+	if (in_packet == NULL)
+	{
+		printf("av_packet_alloc error\n");
+		return -1;
+	}
 	 
 	while (1) // PInFmtContext to in_packet( to server )
 	{
@@ -155,7 +157,7 @@ int main(int argc, char **argv)
 		ret=av_read_frame(pInFmtContext,in_packet);
 		/*each frame should be save as image*/
 
-		printf("The av_read_frame is %d kb\n",in_packet->size);
+		printf("The av_read_frame size of each frame is %d kb\n",(in_packet->size)/1000);
 		if(ret<0)
 		{
 			printf("read frame end\n");
