@@ -1,5 +1,5 @@
 
-CFLAGS = -Wall -O -g
+CFLAGS = -Wall
 LDFLAGS = -I /usr/local/ffmpeg/include \
 	-L /usr/local/ffmpeg/lib \
 	-lavdevice \
@@ -9,7 +9,7 @@ LDFLAGS = -I /usr/local/ffmpeg/include \
 	-lavfilter \
 	-lswresample \
 	-lswscale
-target:
-	g++ -std=c++11 pull.cpp -o pullvideo $(LDFLAGS) $(CFLAGS)	
+all:
+	gcc pull.c -o pullvideo $(LDFLAGS) $(CFLAGS)	
 clean:
 	rm pullvideo 
