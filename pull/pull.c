@@ -19,6 +19,15 @@ AVCodec *pCodec;
 #define URL "rtmp://120.77.214.213:1935/live_video/video"
 #define OUT "helloworld.yuv"
 
+void save_one_image(AVFrame *pFrameYUV,AVCodecContext *pCodecCtx,FILE *video)
+{
+	int screen = 0;
+	if (video == NULL)
+		return;
+	screen = (pCodecCtx->width)*(pCodecCtx->height)*3;
+	fwrite(pFrameYUV->data[0],screen,1,video); 
+}
+
 void init_register_network()
 {
 		/*
@@ -107,7 +116,7 @@ int test_ffmpeg_rtmp_client()
 		printf("avcodec open failed\n");
 		return -1;
 	}
-
+	printf("The width of video is %d, while the height is %d\n",pCodecCtx->width,pCodecCtx->height);
 	uint8_t *out_buffer = (uint8_t *)av_malloc(avpicture_get_size(AV_PIX_FMT_RGB24, pCodecCtx->width, pCodecCtx->height));
 	avpicture_fill((AVPicture *)pFrameYUV, out_buffer, AV_PIX_FMT_RGB24, pCodecCtx->width, pCodecCtx->height);
 	//The size of video
@@ -133,7 +142,7 @@ int test_ffmpeg_rtmp_client()
 			printf("video_stream_index......\n");
 			fprintf(stdout, "video stream, packet size: %d\n", pkt->size);
 
-			//decodering video		
+			//decodering video	from avPacket to avFrame	
 			ret = avcodec_decode_video2(pCodecCtx,pFrame,&got_picture,pkt);
 
 			/*pkt->size should not be zero, if it is, it should be break*/
@@ -153,7 +162,12 @@ int test_ffmpeg_rtmp_client()
 
 				//save image for only one picture
 				if (frame_output == 1)
-					fwrite(pFrameYUV->data[0],(pCodecCtx->width)*(pCodecCtx->height)*3,1,video); 
+				{
+					//fwrite(pFrameYUV->data[0],(pCodecCtx->width)*(pCodecCtx->height)*3,1,video); 
+					/*save one image from pFrameYUV*/
+					save_one_image(pFrameYUV,pCodecCtx,video);
+					break;//break to pull
+				}
 			}
 
 		}
@@ -169,6 +183,7 @@ int test_ffmpeg_rtmp_client()
 	fclose(video); 
 	avcodec_close(pCodecCtx);
 	av_frame_free(&pFrame);
+	avformat_close_input(&format_ctx);
 	return 0;
 }
 int main(int argc, char **argv)
