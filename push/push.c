@@ -100,7 +100,7 @@ int main(int argc, char **argv)
 
 		//find decoder
 		pInCodec=avcodec_find_decoder(in_stream->codecpar->codec_id);
-		printf("%x, %d\n", pInCodec, in_stream->codecpar->codec_id);
+		printf("%p, %d\n", pInCodec, in_stream->codecpar->codec_id);
 
 		out_stream=avformat_new_stream(pOutFmtContext,pInCodec);
 		if(out_stream==NULL)
