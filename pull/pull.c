@@ -185,6 +185,7 @@ void test_ffmpeg_rtmp_client()
 				if (index == 1)
 				{
 					ret = save_index_image(rgb_frame,pCodecCtx->width,pCodecCtx->height,index);
+					img_convert_jpeg(pCodecCtx-> width, pCodecCtx->height);
 					if (ret)
 						return;
 				}
