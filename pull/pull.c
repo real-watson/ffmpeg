@@ -13,7 +13,6 @@ AVStream *stream;
 AVCodecContext *pCodecCtx;
 AVCodec *pCodec;
 
-
 #define URL "rtmp://120.77.214.213:1935/live_video/video"
 #define OUT "helloworld.yuv"
 
@@ -134,7 +133,6 @@ void test_ffmpeg_rtmp_client()
 			}
 		}
  
-		printf("stop here\n");
 		if (pkt->stream_index == audio_stream_index)
 			fprintf(stdout, "audio stream, packet size: %d\n", pkt->size);
  
