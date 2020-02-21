@@ -130,8 +130,7 @@ void test_ffmpeg_rtmp_client()
 	img_convert_ctx = sws_getContext(pCodecCtx->width,pCodecCtx->height,pCodecCtx->pix_fmt,pCodecCtx->width,pCodecCtx->height,AV_PIX_FMT_RGB24, SWS_BICUBIC, NULL, NULL, NULL);
 	numbytes = avpicture_get_size(AV_PIX_FMT_RGB24, pCodecCtx->width,pCodecCtx->height);
 	out_buffer = (uint8_t *) av_malloc(numbytes * sizeof(uint8_t));
-	avpicture_fill((AVPicture *) rgb_frame, out_buffer, AV_PIX_FMT_RGB24,
-	            pCodecCtx->width, pCodecCtx->height);
+	avpicture_fill((AVPicture *) rgb_frame, out_buffer, AV_PIX_FMT_RGB24,pCodecCtx->width, pCodecCtx->height);
 	size = pCodecCtx->width * pCodecCtx->height;
 
 	/*
