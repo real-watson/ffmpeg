@@ -75,6 +75,7 @@ int main(int argc, char **argv)
 		printf("avformat_output_context2 failed\n");
 		return -1;
 	}
+	
 	/*search the index of video*/
 	for(i=0;i<pInFmtContext->nb_streams;i++)
 	{
@@ -123,6 +124,7 @@ int main(int argc, char **argv)
 	}
 
 	av_dump_format(pOutFmtContext,0,PUSH_PATH,1);
+
 	/*
 	out_file -> rtmp address
 	AVIO_FLAG_WRITE -> WRITE
@@ -136,7 +138,9 @@ int main(int argc, char **argv)
 
 	start_time=av_gettime();
 	printf("The start time is %ld\n",start_time);
+
 	ret=avformat_write_header(pOutFmtContext,NULL);
+
 	in_packet=av_packet_alloc();
 	 
 	while (1) 
@@ -175,12 +179,14 @@ int main(int argc, char **argv)
 			AVRational dst_time_base={1,AV_TIME_BASE};
 			int64_t pts_time=av_rescale_q(in_packet->pts,in_stream->time_base,dst_time_base);
 			int64_t now_time=av_gettime()-start_time;
+
 			//delay for pushing video
 			if(pts_time>now_time)
 			{
 				av_usleep(pts_time-now_time);
 			}
 		} 
+
 		/*
 		if(codec_type==AVMEDIA_TYPE_AUDIO)
 		{
@@ -194,6 +200,7 @@ int main(int argc, char **argv)
 			}
 		}
 		*/
+
 		out_stream=pOutFmtContext->streams[in_packet->stream_index];
 		av_packet_rescale_ts(in_packet,in_stream->time_base, out_stream->time_base);
 		in_packet->pos = -1;
@@ -206,10 +213,13 @@ int main(int argc, char **argv)
 			printf("av_interleaved_write_frame failed\n");
 			break;
 		}
+
 		av_packet_unref(in_packet);//for next frame_read
 	}
-	/*close and free*/
+
 	av_write_trailer(pOutFmtContext);
+
+	/*close and free*/
 	av_packet_free(&in_packet);
 	avformat_close_input(&pInFmtContext);
 	avio_close( pOutFmtContext->pb);
