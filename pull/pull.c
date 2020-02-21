@@ -135,7 +135,9 @@ int test_ffmpeg_rtmp_client()
 
 			//decodering video		
 			ret = avcodec_decode_video2(pCodecCtx,pFrame,&got_picture,pkt);
-			if (ret < 0)
+
+			/*pkt->size should not be zero, if it is, it should be break*/
+			if (ret < 0 && !(pkt->size))
 			{
 				printf("decoder error......\n");
 				return -1;
