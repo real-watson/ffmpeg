@@ -35,7 +35,7 @@ int save_jpeg(AVFrame *pFrame, char *out_name)
     
     AVFormatContext *pFormatCtx = avformat_alloc_context();
 
-    //output format as mjpeg
+    /*output format as mjpeg*/
     pFormatCtx->oformat = av_guess_format("mjpeg", NULL, NULL);
 
     if (avio_open(&pFormatCtx->pb, out_name, AVIO_FLAG_READ_WRITE) < 0) {
@@ -49,13 +49,14 @@ int save_jpeg(AVFrame *pFrame, char *out_name)
     }
 
     AVCodecParameters *parameters = NULL;
-    parameters = pAVStream->codecpar;
+    parameters = pAVStream->codecpar;/*New stream sets parameters*/
     parameters->codec_id = pFormatCtx->oformat->video_codec;
     parameters->codec_type = AVMEDIA_TYPE_VIDEO;
-    parameters->format = AV_PIX_FMT_YUVJ420P;
+    parameters->format = AV_PIX_FMT_YUVJ420P;/*Video format setting*/
     parameters->width = pFrame->width;
     parameters->height = pFrame->height;
 
+	/*find encoder for this format*/
     AVCodec *pCodec = avcodec_find_encoder(pAVStream->codecpar->codec_id);
 
     if (!pCodec) {
@@ -68,7 +69,8 @@ int save_jpeg(AVFrame *pFrame, char *out_name)
         fprintf(stderr, "Could not allocate video codec context\n");
         exit(1);
     }
-
+	
+	/*copied parameters to context*/
     if ((avcodec_parameters_to_context(pCodeCtx, pAVStream->codecpar)) < 0) {
         fprintf(stderr, "Failed to copy %s codec parameters to decoder context\n",
                 av_get_media_type_string(AVMEDIA_TYPE_VIDEO));
@@ -88,9 +90,15 @@ int save_jpeg(AVFrame *pFrame, char *out_name)
         return -1;
     }
 
-    //Encode
+    /*Encode*/
     AVPacket pkt;
     av_new_packet(&pkt, (pFrame->width)*(pFrame->height) * 3);
+	
+	/*
+	* sending frame to the encoder
+	* recving packet which encoded from encoder
+	* pkt has this encoding data
+	*/
 
 	/*send frame*/
     ret = avcodec_send_frame(pCodeCtx, pFrame);
