@@ -7,7 +7,7 @@
 #include <libavcodec/avcodec.h>
 #include <libswresample/swresample.h>
 
-AVFormatContext *format_ctx;
+AVFormatContext *in_format_ctx;
 AVPacket *pkt;
 AVStream *stream;
 AVCodecContext *pCodecCtx;
@@ -81,10 +81,10 @@ void test_ffmpeg_rtmp_client()
 	init_register_network();
 
 	//alloc context
-	format_ctx = avformat_alloc_context();
+	in_format_ctx = avformat_alloc_context();
 
 	//open video file -> rtmp path
-	ret = avformat_open_input(&format_ctx, URL, NULL, NULL);
+	ret = avformat_open_input(&in_format_ctx, URL, NULL, NULL);
 	if (ret < 0)
 	{
 		fprintf(stderr, "fail to open url: %s, return value: %d\n", URL, ret);
@@ -92,7 +92,7 @@ void test_ffmpeg_rtmp_client()
 	}
 
 	// Read packets of a media file to get stream information
-	ret = avformat_find_stream_info(format_ctx, NULL);
+	ret = avformat_find_stream_info(in_format_ctx, NULL);
 	if (ret < 0) 
 	{
 		fprintf(stderr, "fail to get stream information: %d\n", ret);
@@ -100,9 +100,9 @@ void test_ffmpeg_rtmp_client()
 	}
 	
 	/*Fetch index of audio and video from streams*/ 
-	for (i = 0; i < format_ctx->nb_streams; i++) 
+	for (i = 0; i < in_format_ctx->nb_streams; i++) 
 	{
-		stream = format_ctx->streams[i];
+		stream = in_format_ctx->streams[i];
 		fprintf(stdout, "type of the encoded data: %d\n", stream->codecpar->codec_id);
 		//video type
 		if (stream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) 
@@ -119,7 +119,7 @@ void test_ffmpeg_rtmp_client()
 	}
 
 	/*Fetch the context from decoder and coder from video*/
-	pCodecCtx = format_ctx->streams[video_stream_index]->codec;
+	pCodecCtx = in_format_ctx->streams[video_stream_index]->codec;
 	
 	/*identity*/
 	pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
@@ -155,12 +155,12 @@ void test_ffmpeg_rtmp_client()
 	/*avoid segmentation fault*/
 	pkt = av_packet_alloc();
 	av_new_packet(pkt,size);
-	av_dump_format(format_ctx,0,OUT,0);
+	av_dump_format(in_format_ctx,0,OUT,0);
 
 	while (1) 
 	{
 		//read each frame
-		ret = av_read_frame(format_ctx, pkt);
+		ret = av_read_frame(in_format_ctx, pkt);
 		if (ret < 0)
 		{
 			fprintf(stderr, "error or end of file: %d\n", ret);
@@ -204,11 +204,11 @@ void test_ffmpeg_rtmp_client()
 	}
 
 	//free all 
-	avformat_free_context(format_ctx);
+	avformat_free_context(in_format_ctx);
 	av_free(rgb_frame);
 	av_free(out_buffer);
 	avcodec_close(pCodecCtx);
-	avformat_close_input(&format_ctx);
+	avformat_close_input(&in_format_ctx);
 }
 int main(int argc, char **argv)
 {	
