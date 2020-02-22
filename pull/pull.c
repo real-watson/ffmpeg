@@ -48,7 +48,8 @@ int save_jpeg(AVFrame *pFrame, char *out_name)
         return -1;
     }
 
-    AVCodecParameters *parameters = pAVStream->codecpar;
+    AVCodecParameters *parameters = NULL;
+    parameters = pAVStream->codecpar;
     parameters->codec_id = pFormatCtx->oformat->video_codec;
     parameters->codec_type = AVMEDIA_TYPE_VIDEO;
     parameters->format = AV_PIX_FMT_YUVJ420P;
