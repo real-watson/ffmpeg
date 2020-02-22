@@ -32,9 +32,12 @@ int save_index_image(AVFrame *rgb_frame, int width, int height, int index)
 {
 	FILE *img = NULL;
 	int i;
+	char filename[32] = "";
 
+	//merge the filename
+	sprintf(filename,"%d_%s",index,OUT);
 	//open FILE video
-	img = fopen(OUT,"wb");
+	img = fopen(filename,"wb");
 
 	if (NULL == img || rgb_frame == NULL)
 	{
@@ -185,7 +188,8 @@ void test_ffmpeg_rtmp_client()
 				if (index == 1)
 				{
 					ret = save_index_image(rgb_frame,pCodecCtx->width,pCodecCtx->height,index);
-					img_convert_jpeg(pCodecCtx-> width, pCodecCtx->height);
+					/*hidden img convert function just let c behavior comes in*/
+					//img_convert_jpeg(pCodecCtx-> width, pCodecCtx->height);
 					if (ret)
 						return;
 				}
