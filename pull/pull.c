@@ -170,8 +170,6 @@ void test_ffmpeg_rtmp_client()
 		//index of av 
 		if (pkt->stream_index == video_stream_index)
 		{
-			printf("video_stream_index......\n");
-			fprintf(stdout, "video stream, packet size: %d\n", pkt->size);
 			/*decode video*/
 			ret = avcodec_decode_video2(pCodecCtx,per_frame,&got_picture,pkt);
 
