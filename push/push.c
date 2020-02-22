@@ -7,6 +7,7 @@
 
 #define PUSH_PATH "rtmp://120.77.214.213:1935/live_video/video"
 #define AVIN_PATH "hello.mp4"
+#define VERSION 1.01
 
 char *push_proto_set(char *path)
 {
@@ -33,7 +34,10 @@ int main(int argc, char **argv)
 	int video_frame_size = 0;
 	int audio_frame_size = 0;
 	char fm_name[128] = "";
-	int64_t start_time;
+	int64_t start_time = 0;
+	int64_t currt_time= 0;
+	int64_t pts_time = 0;
+	int codec_type;
 
 	AVFormatContext *pInFmtContext = NULL;
 	AVStream *in_stream = NULL;
@@ -178,21 +182,19 @@ int main(int argc, char **argv)
 			printf("recv %5d audio frame %5d-%5d\n", ++audio_frame_count, in_packet->size, audio_frame_size);
 		}
 
-		int codec_type=in_stream->codecpar->codec_type;
+		codec_type=in_stream->codecpar->codec_type;
 		//add check for rtmp or udp
 		/*check the types of stream*/
 		if(codec_type==AVMEDIA_TYPE_VIDEO)
 		{
 
 			AVRational dst_time_base={1,AV_TIME_BASE};
-			int64_t pts_time=av_rescale_q(in_packet->pts,in_stream->time_base,dst_time_base);
-			int64_t now_time=av_gettime()-start_time;
+			pts_time=av_rescale_q(in_packet->pts,in_stream->time_base,dst_time_base);
+			currt_time=av_gettime()-start_time;
 
-			//delay for pushing video
-			if(pts_time>now_time)
-			{
-				av_usleep(pts_time-now_time);
-			}
+			/*avoid the speed of pushing to server to be fast, differing from frame to frame.*/
+			if(pts_time>currt_time)
+				av_usleep(pts_time-currt_time);
 		} 
 
 		/*
