@@ -23,7 +23,7 @@ AVFrame *rgb_frame;
 #define JPG "hello.jpg"
 #define VERSION 1.01
 #define PNM 0
-#define JPEG 1
+#define FLAG 1
 #define MJPG 1
 void generate_file_name(int index,char *filename)
 {
@@ -298,7 +298,7 @@ void test_ffmpeg_rtmp_client()
 				return;
 			}
 			/*If one picture comes it should be storage.*/
-			if (JPEG)
+			if (FLAG)
 			{
 				index++;
 #if PNM
