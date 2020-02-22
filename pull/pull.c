@@ -18,7 +18,6 @@ AVFrame *per_frame;
 #define OUT "helloworld.pnm"
 #define JPG "hello.jpg"
 #define VERSION 1.01
-#define PNM 0
 #define FLAG 1
 #define MJPG 1
 void generate_file_name(int index,char *filename)
@@ -266,10 +265,6 @@ void test_ffmpeg_rtmp_client()
 
 	//free all 
 	avformat_free_context(in_format_ctx);
-#if PNM
-	av_free(rgb_frame);
-	av_free(out_buffer);
-#endif
 	avcodec_close(pCodecCtx);
 	avformat_close_input(&in_format_ctx);
 }
