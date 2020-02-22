@@ -18,6 +18,7 @@ AVFrame *rgb_frame;
 #define URL "rtmp://120.77.214.213:1935/live_video/video"
 #define OUT "helloworld.pnm"
 #define JPG "hello.jpg"
+#define VERSION 1.01
 
 void img_convert_jpeg(int width, int height)
 {
