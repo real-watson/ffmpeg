@@ -25,6 +25,15 @@ AVFrame *rgb_frame;
 #define PNM 0
 #define JPEG 1
 
+void generate_file_name(int index,char *filename)
+{
+	if (!index)
+		return;
+	memset(filename,0,strlen(filename));
+	sprintf(filename,"jpg/no_%d.jpg",index);
+}
+
+
 int save_jpeg(AVFrame *pFrame, char *out_name)
 {
     AVCodecContext *pCodeCtx = NULL;
@@ -309,8 +318,10 @@ void test_ffmpeg_rtmp_client()
 				/*receive packet*/
 				while(avcodec_receive_frame(pCodecCtx,per_frame) == 0)
 				{
-					sprintf(filename,"jpg/NO_%d.jpg",index);	
-					save_jpeg(per_frame,filename);//save image as jpeg	
+					generate_file_name(index,filename);
+					ret = save_jpeg(per_frame,filename);//save image as jpeg	
+					if (ret == -1)
+						return;
 				}
 			}
 
