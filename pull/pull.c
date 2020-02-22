@@ -24,7 +24,7 @@ AVFrame *rgb_frame;
 #define VERSION 1.01
 #define PNM 0
 #define JPEG 1
-
+#define MJPG 1
 void generate_file_name(int index,char *filename)
 {
 	if (!index)
@@ -312,6 +312,7 @@ void test_ffmpeg_rtmp_client()
 						return;
 				}
 #endif
+#if MJPG
 				/*avcodec send packet*/
 				if (avcodec_send_packet(pCodecCtx,pkt) < 0)
 					continue;
@@ -323,6 +324,7 @@ void test_ffmpeg_rtmp_client()
 					if (ret == -1)
 						return;
 				}
+#endif
 			}
 
 		}
