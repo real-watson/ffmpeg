@@ -10,6 +10,6 @@ LDFLAGS = -I /usr/local/ffmpeg/include \
 	-lswresample \
 	-lswscale
 all:
-	gcc pull.c -o test $(LDFLAGS) $(CFLAGS)	
+	gcc pull.c file.c jpeg.c avinit.c video.c -o test $(LDFLAGS) $(CFLAGS)	
 clean:
 	rm test
