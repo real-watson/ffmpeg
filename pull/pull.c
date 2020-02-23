@@ -345,7 +345,9 @@ void test_ffmpeg_rtmp_client()
  
 		av_packet_unref(pkt);
 	}
+#if RTMP
 	av_write_trailer(out_format_ctx);
+#endif
 	//free all 
 	avformat_free_context(in_format_ctx);
 	avcodec_close(pCodecCtx);
