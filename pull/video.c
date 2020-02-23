@@ -169,7 +169,10 @@ void test_ffmpeg_rtmp_client()
 			pkt->pos = 1;
 			
 			/*write frame to the OUT*/
-			ret = av_interleaved_write_frame(out_format_ctx,pkt);
+			//ret = av_interleaved_write_frame(out_format_ctx,pkt);
+
+			/*Only the single stream, it can handle the pkt*/
+			ret = av_write_frame(out_format_ctx,pkt);
 			if (ret < 0) //error code
 			{
 				switch(ret)
