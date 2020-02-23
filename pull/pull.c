@@ -15,11 +15,15 @@ AVCodec *pCodec;
 AVFrame *per_frame;
 
 #define URL "rtmp://120.77.214.213:1935/live_video/video"
-#define OUT "helloworld.pnm"
+#define OUT "helloworld.flv"
 #define JPG "hello.jpg"
 #define VERSION 1.01
 #define FLAG 1
-#define MJPG 1
+
+/*choose one of two methods*/
+#define MJPG 0
+#define RTMP 1/*always do it not*/
+
 void generate_file_name(int index,char *filename)
 {
 	if (!index)
@@ -191,6 +195,46 @@ void test_ffmpeg_rtmp_client()
 		fprintf(stderr, "no video audio stream\n");
 		return;
 	}
+#if RTMP
+	av_dump_format(in_format_ctx,0,URL,0);
+	AVFormatContext *out_format_ctx = NULL;
+
+	/* set context from OUT to out_format_ctx*/
+	avformat_alloc_output_context2(&out_format_ctx, NULL, NULL,OUT);
+	AVOutputFormat* ofmt = NULL;
+	ofmt = out_format_ctx->oformat;
+
+	/*set out_stream with in_stream's codec*/
+	for (i = 0; i < in_format_ctx->nb_streams; i++)
+	{
+		/*Add more stream channel*/
+		AVStream *in_stream;
+		AVStream *out_stream;
+
+		in_stream = in_format_ctx->streams[i];
+		out_stream = avformat_new_stream(out_format_ctx, in_stream->codec->codec);
+
+		ret = avcodec_copy_context(out_stream->codec, in_stream->codec);
+		out_stream->codec->codec_tag = 0;
+
+		if (out_format_ctx->oformat->flags & AVFMT_GLOBALHEADER)
+			out_stream->codec->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+	}
+	av_dump_format(out_format_ctx, 0, OUT, 1);
+
+	if (!(ofmt->flags & AVFMT_NOFILE))
+	{
+		/*open OUT for out_format_ctx's pb just like New something*/
+		ret = avio_open(&out_format_ctx->pb,OUT, AVIO_FLAG_WRITE);
+		if (ret < 0)
+		{
+			printf("Could not open output URL '%s'", OUT);
+			return;
+		}
+	}
+	/*Write head to file out_format_ctx as OUT*/
+	avformat_write_header(out_format_ctx,NULL);
+#endif
 
 	/*Fetch the context from decoder and coder from video*/
 	pCodecCtx = in_format_ctx->streams[video_stream_index]->codec;
@@ -212,8 +256,9 @@ void test_ffmpeg_rtmp_client()
 	printf("The width of video is %d, while the height is %d\n",pCodecCtx->width,pCodecCtx->height);
 
 	//alloc for rgb memory
+#if MJPG
 	per_frame = av_frame_alloc();
-
+#endif
 	/*
 	*	read each frame using av_read_frame
 	*	check the index of av
@@ -227,6 +272,7 @@ void test_ffmpeg_rtmp_client()
 	while (1) 
 	{
 		//read each frame
+
 		ret = av_read_frame(in_format_ctx, pkt);
 		if (ret < 0)
 		{
@@ -261,6 +307,34 @@ void test_ffmpeg_rtmp_client()
 				}
 #endif
 				/*receive the rtmp stream stored in local file:mp4 format*/
+#if RTMP
+				AVStream* in_stream, * out_stream;
+
+				in_stream = in_format_ctx->streams[pkt->stream_index];
+				out_stream = out_format_ctx->streams[pkt->stream_index];
+
+				/*
+				*	PTS as presentation time stamp
+				*	DTS as display time stamp
+				*	When without B frame, PTS and DTS are the same
+				*/
+
+				pkt->pts = av_rescale_q_rnd(pkt->pts, in_stream->time_base, out_stream->time_base, (enum AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
+				pkt->dts = av_rescale_q_rnd(pkt->dts, in_stream->time_base, out_stream->time_base, (enum AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
+				pkt->duration = av_rescale_q(pkt->duration, in_stream->time_base, out_stream->time_base);
+				pkt->pos = 1;
+				
+				/*write frame to the OUT*/
+				ret = av_interleaved_write_frame(out_format_ctx,pkt);
+				if (ret < 0)
+				{
+					if (ret == -22)
+						continue;
+					else
+						break;
+	
+				}
+#endif
 
 			}
 
@@ -271,7 +345,7 @@ void test_ffmpeg_rtmp_client()
  
 		av_packet_unref(pkt);
 	}
-
+	av_write_trailer(out_format_ctx);
 	//free all 
 	avformat_free_context(in_format_ctx);
 	avcodec_close(pCodecCtx);
