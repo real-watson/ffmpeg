@@ -150,9 +150,21 @@ void test_ffmpeg_rtmp_client()
 			*	DTS as display time stamp
 			*	When without B frame, PTS and DTS are the same
 			*/
+			/*The pts is 44160, the dts is 44160, and duration is 21*/
+			/*
+			*	The pts and dts should not be changed
+			*	because of time_base is the same from the original
+			*	If there is no B frame in video, I frame and P frame should be display at the same time.
+			*	IF there is B frame in video, I frame should be displayed first,while
+			*	B and P frame like this:
+			*	B decode last, P decode first
+			*	B display first, P display last
+			*	The time base should be defined as uint64_t data format
+			*/
 
 			pkt->pts = av_rescale_q_rnd(pkt->pts, in_stream->time_base, out_stream->time_base, (enum AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
 			pkt->dts = av_rescale_q_rnd(pkt->dts, in_stream->time_base, out_stream->time_base, (enum AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
+			/*Get the delta from frame to frame*/
 			pkt->duration = av_rescale_q(pkt->duration, in_stream->time_base, out_stream->time_base);
 			pkt->pos = 1;
 			
