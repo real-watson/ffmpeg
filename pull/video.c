@@ -170,13 +170,19 @@ void test_ffmpeg_rtmp_client()
 			
 			/*write frame to the OUT*/
 			ret = av_interleaved_write_frame(out_format_ctx,pkt);
-			if (ret < 0)
+			if (ret < 0) //error code
 			{
-				if (ret == -22)
-					continue;
-				else
+				switch(ret)
+				{
+					case -22: continue;
+
+					case -32: 
+					printf("socket error\n");
 					break;
 
+					defualt:
+					break;
+				}
 			}
 		}//end of if
 #endif
