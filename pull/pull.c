@@ -281,6 +281,40 @@ void test_ffmpeg_rtmp_client()
 		}
 		fprintf(stdout, "video stream, packet size: %d\n", pkt->size);
 		//index of av 
+		
+		/*receive the rtmp stream stored in local file:mp4 format*/
+#if RTMP
+		if (pkt->size != 0)
+		{
+			AVStream* in_stream, * out_stream;
+
+			in_stream = in_format_ctx->streams[pkt->stream_index];
+			out_stream = out_format_ctx->streams[pkt->stream_index];
+
+			/*
+			*	PTS as presentation time stamp
+			*	DTS as display time stamp
+			*	When without B frame, PTS and DTS are the same
+			*/
+
+			pkt->pts = av_rescale_q_rnd(pkt->pts, in_stream->time_base, out_stream->time_base, (enum AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
+			pkt->dts = av_rescale_q_rnd(pkt->dts, in_stream->time_base, out_stream->time_base, (enum AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
+			pkt->duration = av_rescale_q(pkt->duration, in_stream->time_base, out_stream->time_base);
+			pkt->pos = 1;
+			
+			/*write frame to the OUT*/
+			ret = av_interleaved_write_frame(out_format_ctx,pkt);
+			if (ret < 0)
+			{
+				if (ret == -22)
+					continue;
+				else
+					break;
+
+			}
+		}//end of if
+#endif
+		/*Check whether the index is video stream*/
 		if (pkt->stream_index == video_stream_index)
 		{
 			/*pkt->size should not be zero, if it is, it should be break*/
@@ -306,36 +340,6 @@ void test_ffmpeg_rtmp_client()
 						return;
 				}
 #endif
-				/*receive the rtmp stream stored in local file:mp4 format*/
-#if RTMP
-				AVStream* in_stream, * out_stream;
-
-				in_stream = in_format_ctx->streams[pkt->stream_index];
-				out_stream = out_format_ctx->streams[pkt->stream_index];
-
-				/*
-				*	PTS as presentation time stamp
-				*	DTS as display time stamp
-				*	When without B frame, PTS and DTS are the same
-				*/
-
-				pkt->pts = av_rescale_q_rnd(pkt->pts, in_stream->time_base, out_stream->time_base, (enum AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
-				pkt->dts = av_rescale_q_rnd(pkt->dts, in_stream->time_base, out_stream->time_base, (enum AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
-				pkt->duration = av_rescale_q(pkt->duration, in_stream->time_base, out_stream->time_base);
-				pkt->pos = 1;
-				
-				/*write frame to the OUT*/
-				ret = av_interleaved_write_frame(out_format_ctx,pkt);
-				if (ret < 0)
-				{
-					if (ret == -22)
-						continue;
-					else
-						break;
-	
-				}
-#endif
-
 			}
 
 		}
