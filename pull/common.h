@@ -17,7 +17,7 @@ AVCodec *pCodec;
 AVFrame *per_frame;
 
 #define URL "rtmp://120.77.214.213:1935/live_video/video"
-#define OUT "video/helloworld.flv"
+#define OUT "helloworld.flv"
 #define JPG "hello.jpg"
 #define VERSION 1.01
 #define FLAG 1

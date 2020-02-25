@@ -8,6 +8,8 @@ void test_ffmpeg_rtmp_client()
 	int audio_stream_index = -1;
 	int index = 0;
 	char filename[32] = "";
+	int audio_size_all = 0;
+	int video_size_all = 0;
 
 	//init register and network
 	init_register_network();
@@ -192,6 +194,10 @@ void test_ffmpeg_rtmp_client()
 		/*Check whether the index is video stream*/
 		if (pkt->stream_index == video_stream_index)
 		{
+			fprintf(stdout, "video stream, packet size: %d\n", pkt->size);
+			video_size_all += pkt->size;
+			printf("The video size totally is %d kb\n",video_size_all/100000);
+
 			/*pkt->size should not be zero, if it is, it should be break*/
 			if (ret < 0 && !(pkt->size))
 			{
@@ -220,7 +226,12 @@ void test_ffmpeg_rtmp_client()
 		}
  
 		if (pkt->stream_index == audio_stream_index)
+		{
 			fprintf(stdout, "audio stream, packet size: %d\n", pkt->size);
+			audio_size_all += pkt->size;
+			printf("The audio size totally is %d kb\n",audio_size_all/100000);
+		}
+
  
 		av_packet_unref(pkt);
 	}
