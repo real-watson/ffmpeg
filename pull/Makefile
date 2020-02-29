@@ -8,8 +8,11 @@ LDFLAGS = -I /usr/local/ffmpeg/include \
 	-lavutil \
 	-lavfilter \
 	-lswresample \
-	-lswscale
+	-lswscale \
+	-larcsoft_face \
+	-larcsoft_face_engine 
+
 all:
-	gcc pull.c file.c jpeg.c avinit.c video.c -o test $(LDFLAGS) $(CFLAGS)	
+	gcc pull.c face.c file.c jpeg.c avinit.c video.c -o test $(LDFLAGS) $(CFLAGS)	
 clean:
 	rm test
